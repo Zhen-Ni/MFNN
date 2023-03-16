@@ -5,7 +5,21 @@ import torch
 
 TensorFunc = typing.Callable[[torch.Tensor], torch.Tensor]
 
-__all__ = ('FCNN',)
+__all__ = ('XYDataSet', 'FCNN', 'HFNN')
+
+
+class XYDataSet(torch.utils.data.Dataset):
+    def __init__(self, x: torch.Tensor, y: torch.Tensor):
+        if len(x) != len(y):
+            raise ValueError('size of x and y not match')
+        self.x = x
+        self.y = y
+
+    def __len__(self) -> int:
+        return len(self.x)
+
+    def __getitem__(self, idx) -> torch.Tensor:
+        return self.x[idx], self.y[idx]
 
 
 class BasicBlock(torch.nn.Module):
@@ -13,11 +27,9 @@ class BasicBlock(torch.nn.Module):
 
     def __init__(self, in_features: int,
                  out_features: int,
-                 activation: type[torch.nn.Module] | None):
+                 activation: type[torch.nn.Module]):
         super().__init__()
         self.linear_layer = torch.nn.Linear(in_features, out_features)
-        if activation is None:
-            activation = torch.nn.Identity
         self.activation = activation()
 
     def forward(self, x):
@@ -31,7 +43,7 @@ class FCNN(torch.nn.Module):
                  in_features: int,
                  out_features: int,
                  midlayer_features: list[int],
-                 activation: type[torch.nn.Module] | None = torch.nn.ReLU
+                 activation: type[torch.nn.Module] = torch.nn.ReLU
                  ):
         super().__init__()
 
@@ -73,23 +85,21 @@ class HFNN(torch.nn.Module):
         object.__setattr__(self, 'lfnn', lfnn)
         self.lfnn: torch.nn.Module | TensorFunc
 
-        self.nonlinear_nn = FCNN(in_features + out_features,
-                                 out_features,
-                                 midlayer_features,
-                                 activation)
-        self.linear_nn = FCNN(in_features + out_features,
-                              out_features,
-                              [],
-                              torch.nn.Identity)
-        self.nonlinear_ratio = torch.nn.Parameter(torch.Tensor(1))
+        self.layers = FCNN(in_features + out_features,
+                           out_features,
+                           midlayer_features,
+                           activation)
+        self.shortcut = FCNN(in_features + out_features,
+                             out_features,
+                             [],
+                             torch.nn.Identity)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         y_low = self.lfnn(x)
         x_comb = torch.concat([x, y_low], dim=1)
-        y_nonlinear = self.nonlinear_nn(x_comb)
-        y_linear = self.linear_nn(x_comb)
-        y = (y_nonlinear * self.nonlinear_ratio +
-             y_linear * (1 - self.nonlinear_ratio))
+        y_layer = self.layers(x_comb)
+        y_shortcut = self.shortcut(x_comb)
+        y = y_layer + y_shortcut
         return y
 
 
