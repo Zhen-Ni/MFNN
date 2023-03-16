@@ -91,15 +91,14 @@ class Trainer():
     def __init__(self,
                  model: torch.nn.Module,
                  loss: torch.nn.Module,
+                 optimizer: type[torch.optim.Optimizer] | None = None,
                  *,
                  start_epoch: int = 0,
                  filename: str | None = None,
                  logger: str | None = None,
-                 lr: float = 0.1,
-                 milestones: list[int] = [100, 150],
+                 milestones: list[int] = [],
                  gamma: float = 0.1,
-                 weight_decay: float = 1e-4,
-                 momentum: float = 0.9
+                 **kwargs
                  ):
         self.model = model
         self.loss_function = loss.to(self.device)
@@ -110,11 +109,12 @@ class Trainer():
         else:
             self.logger = get_logger('trainer')
 
-        self.optimizer = torch.optim.SGD(
-            self.model.parameters(),
-            lr=lr, weight_decay=weight_decay, momentum=momentum)
+        if optimizer is None:
+            optimizer = torch.optim.SGD
+        self.optimizer = optimizer(self.model.parameters(),
+                                   **kwargs)
         self.scheduler = torch.optim.lr_scheduler.MultiStepLR(
-            self.optimizer, gamma=gamma, milestones=milestones,
+            self.optimizer, milestones=milestones, gamma=gamma,
             last_epoch=self.epoch-1)
 
         self.history: dict[str, list[float]] = {'train_loss': [],
