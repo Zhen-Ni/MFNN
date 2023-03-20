@@ -109,6 +109,7 @@ class MFNN():
     This class contains two networks, for fitting low-fidelity data and
     high fidelity data respectively.
     """
+
     def __init__(self,
                  in_features: int,
                  out_features: int,
@@ -193,7 +194,7 @@ if __name__ == '__main__':
 
     lfnn = FCNN(1, 1, [16, 16, 16], activation=torch.nn.Tanh)
     hfnn = HFNN(lfnn, 1, 1, [32, 32])
-    mfnn = MFNN(1, 1, [16, 16], [16], activation=torch.nn.Tanh)
+    mfnn = MFNN(1, 1, [16], [16, 16], [16], activation=torch.nn.Tanh)
 
     ylow = lfnn(x)
     yhigh = hfnn(x)
