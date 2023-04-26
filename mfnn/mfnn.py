@@ -6,21 +6,7 @@ import torch
 
 TensorFunc = typing.Callable[[torch.Tensor], torch.Tensor]
 
-__all__ = ('XYDataSet', 'FCNN', 'HFNN', 'MFNN')
-
-
-class XYDataSet(torch.utils.data.Dataset):
-    def __init__(self, x: torch.Tensor, y: torch.Tensor):
-        if len(x) != len(y):
-            raise ValueError('size of x and y not match')
-        self.x = x
-        self.y = y
-
-    def __len__(self) -> int:
-        return len(self.x)
-
-    def __getitem__(self, idx) -> torch.Tensor:
-        return self.x[idx], self.y[idx]
+__all__ = ('FCNN', 'HFNN', 'MFNN')
 
 
 class BasicBlock(torch.nn.Module):
@@ -44,7 +30,7 @@ class FCNN(torch.nn.Module):
                  in_features: int,
                  out_features: int,
                  midlayer_features: list[int],
-                 activation: type[torch.nn.Module] = torch.nn.ReLU
+                 activation: type[torch.nn.Module] = torch.nn.Tanh
                  ):
         super().__init__()
 
@@ -198,5 +184,5 @@ if __name__ == '__main__':
 
     ylow = lfnn(x)
     yhigh = hfnn(x)
-    ylow = mfnn.low()(x)
-    yhigh = mfnn.high()(x)
+    ylow = mfnn.low(x)
+    yhigh = mfnn.high(x)

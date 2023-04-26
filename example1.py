@@ -3,8 +3,8 @@
 import logging
 import torch
 
-from mfnn import FCNN, HFNN, XYDataSet
-from trainer import Trainer
+from mfnn import FCNN, HFNN, XYDataSet, Trainer
+
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -106,10 +106,13 @@ if __name__ == '__main__':
 
     # low-fidelity data
     model1 = FCNN(1, 1, [16, 16], torch.nn.Tanh)
+    optimizer = torch.optim.Adam(model1.parameters(), lr=1e-2, weight_decay=1e-4)
     loss = torch.nn.MSELoss()
-    trainer1 = Trainer(model1, loss, torch.optim.Adam,
-                       lr=1e-2, milestones=[2000, 8000])
-    trainer1.logger.setLevel(logging.WARNING)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(
+        optimizer, milestones=[2000, 8000])
+    trainer1 = Trainer(model1, optimizer, loss,
+                       scheduler=scheduler,
+                       suppress_display=True)
     for i in range(10000):
         res = trainer1.train(loader_low)
         if i % 100 == 0:
@@ -120,10 +123,13 @@ if __name__ == '__main__':
 
     # high-fidelity data
     model2 = FCNN(1, 1, [16, 16], torch.nn.Tanh)
+    optimizer = torch.optim.Adam(
+        model2.parameters(), lr=1e-2, weight_decay=1e-4)
     loss = torch.nn.MSELoss()
-    trainer2 = Trainer(model2, loss, torch.optim.Adam,
-                       lr=1e-2, milestones=[2000, 8000])
-    trainer2.logger.setLevel(logging.WARNING)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(
+        optimizer, milestones=[2000, 8000])
+    trainer2 = Trainer(model2, optimizer, loss,
+                       scheduler=scheduler, suppress_display=True)
     for i in range(10000):
         res = trainer2.train(loader_high)
         if i % 100 == 0:
@@ -135,10 +141,12 @@ if __name__ == '__main__':
     # MFNN
     model3 = HFNN(model1, 1, 1, [16, 16], torch.nn.Tanh)
     loss = torch.nn.MSELoss()
-    trainer3 = Trainer(model3, loss, torch.optim.Adam,
-                       lr=1e-2, milestones=[2000, 8000],
-                       weight_decay=1e-4)
-    trainer3.logger.setLevel(logging.WARNING)
+    optimizer = torch.optim.Adam(
+        model3.parameters(), lr=1e-2, weight_decay=1e-4)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(
+        optimizer, milestones=[2000, 8000])
+    trainer3 = Trainer(model3, optimizer, loss,
+                       scheduler=scheduler, suppress_display=True)
     for i in range(10000):
         res = trainer3.train(loader_high)
         if i % 100 == 0:

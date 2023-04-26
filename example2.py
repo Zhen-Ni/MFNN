@@ -3,8 +3,7 @@
 import logging
 import torch
 
-from mfnn import FCNN, HFNN, MFNN, XYDataSet
-from trainer import Trainer
+from mfnn import FCNN, HFNN, MFNN, XYDataSet, Trainer
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -55,6 +54,7 @@ def figure2(x_low, y_low, x_pred, y_pred, x, y):
     fig.tight_layout(pad=0)
     return fig
 
+
 def figure3(x_low, y_low, x_high, y_high, x_pred, y_pred, x, y):
     "Plot the regression result by low-fidelity data."
     fig = plt.figure(figsize=(3, 2.25))
@@ -85,16 +85,23 @@ if __name__ == '__main__':
     loader_high = torch.utils.data.DataLoader(XYDataSet(x_high, y_high),
                                               batch_size=len(x_low))
     figure1(x_low, y_low, x_high,  y_high, x, y)
-    
+
     model = MFNN(1, 1, [16], [16, 16], [16, 16, 16, 16],  torch.nn.Tanh)
     model_low = model.low
     model_high = model.high
+    optimizer_low = torch.optim.Adam(
+        model_low.parameters(), lr=1e-2, weight_decay=1e-4)
+    optimizer_high = torch.optim.Adam(
+        model_high.parameters(), lr=1e-2, weight_decay=1e-4)
+    scheduler_low = torch.optim.lr_scheduler.MultiStepLR(
+        optimizer_low, milestones=[2000, 8000])
+    scheduler_high = torch.optim.lr_scheduler.MultiStepLR(
+        optimizer_high, milestones=[2000, 8000])
     loss = torch.nn.MSELoss()
 
     # low-fidelity data
-    trainer1 = Trainer(model_low, loss, torch.optim.Adam,
-                       lr=1e-2, milestones=[2000, 8000])
-    trainer1.logger.setLevel(logging.WARNING)
+    trainer1 = Trainer(model_low, optimizer_low, loss,
+                       scheduler=scheduler_low, suppress_display=True)
     for i in range(10000):
         res = trainer1.train(loader_low)
         if i % 100 == 0:
@@ -104,10 +111,9 @@ if __name__ == '__main__':
     figure2(x_low, y_low, x, y1, x, y)
 
     # high-fidelity data
-    trainer2 = Trainer(model_high, loss, torch.optim.Adam,
-                       lr=1e-2, milestones=[2000, 8000],
-                       weight_decay=0e-4)
-    trainer2.logger.setLevel(logging.WARNING)
+
+    trainer2 = Trainer(model_high, optimizer_high,
+                       loss, scheduler=scheduler_high, suppress_display=True)
     for i in range(10000):
         res = trainer2.train(loader_high)
         if i % 100 == 0:
