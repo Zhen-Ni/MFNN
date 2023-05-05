@@ -77,7 +77,7 @@ def figure4(x_low, y_low, x_high, y_high, x_pred, y_pred, x, y):
     "Plot the regression result by low-fidelity data."
     fig = plt.figure(figsize=(3, 2.25))
     ax = fig.add_subplot(111)
-    ax.plot(x_low, y_low, 'o', color='None', markeredgecolor='b', label='high')
+    ax.plot(x_low, y_low, 'o', color='None', markeredgecolor='b', label='low')
     ax.plot(x_high, y_high, 'x', color='r', label='high')
     ax.plot(x_pred, y_pred, 'g', label=r'$y_{\mathrm{pred}}$')
     ax.plot(x, y, 'k:', label='true')

@@ -1,0 +1,44 @@
+* Multi-fidelity Neural Network
+
+Multi-fidelity neural network (MFNN) is used for modeling physical
+systems by multi-fidelity data. In real applications, low-fidelity
+data is usually abundant but less accurate, and high-fidelity data is
+scarce and expensive. MFNN makes uses of both low- and high-fidelity
+data for modeling the physical system, which significantly improves
+data accuracy by a small set of high-fidelity data.
+
+Meng and Karniadakis [1] gave an approach to MFNN by using a
+composite neural network. However, the code is absent for their
+paper. Meanwhile, the use of liner layers in high-fidelity DNN (NN_H1)
+is redundant, as linear features will always be modeled by the
+nonlinear DNN (NN_H2).
+
+Thus, in this repository, a modified version of MFNN is provided,
+where linear DNN (NN_H1) given by paper [1] are replaced by residual
+connection over the nonlinear DNN (NN_H2).The code is implemented using
+pytorch, and examples are provided for MFNN.
+
+* Snapshots
+
+** Data
+
+[[./snapshots/data.svg]]
+
+** Modeling using low-fidelity data
+
+[[./snapshots/low.svg]]
+
+** Modeling by high-fidelity data
+
+[[./snapshots/high.svg]]
+
+** Modeling by both low- and high-fidelity data
+
+[[./snapshots/mfnn.svg]]
+
+* References
+[1] Meng X, Karniadakis GE. A composite neural network that learns
+from multi-fidelity data: Application to function approximation and
+inverse PDE problems. Journal of Computational Physics
+2020;401:109020. https://doi.org/10.1016/j.jcp.2019.109020.
+
