@@ -51,7 +51,7 @@ class Statistics(typing.Generic[T]):
     def update(self, value: T, n: int = 1) -> Statistics[T]:
         self._count += n
         self._value = value
-        self._s1 = self.value * n
+        self._s1 += self.value * n
         self._s2 += value ** 2 * n
         return self
 
